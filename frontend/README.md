@@ -1,68 +1,12 @@
-# Simple Login, Signup, and Welcome Page using ReactJS and Bootstrap
+# React + Vite
 
-A basic web application showcasing a simple login, signup, and welcome page built with Bootstrap and ReactJS.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Table of Contents
-- [Introduction](#introduction)
-- [Features](#features)
-- [Technologies Used](#technologies-used)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
+Currently, two official plugins are available:
 
-## Introduction
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-This project provides a straightforward demonstration of a web application with essential user authentication features. Users can sign up, log in, and are greeted with a welcome page upon successful authentication. The frontend is built using Bootstrap for a responsive and modern UI, while ReactJS handles the dynamic aspects of the application.
+## Expanding the ESLint configuration
 
-## Features
-
-- User authentication: Signup and login functionality.
-- Responsive and visually appealing design with Bootstrap.
-- Seamless user experience with ReactJS.
-
-## Technologies Used
-
-- ReactJS
-- Bootstrap
-
-## Installation
-
-1. Clone the repository:
-
-    ```bash
-    git clone https://github.com/meghanandan/login-signup-reactjs-app.git
-    cd login-signup-reactjs-app
-    ```
-
-2. Install dependencies:
-
-    ```bash
-    npm install
-    ```
-
-## Usage
-
-1. Start the development server:
-
-    ```bash
-    npm start
-    ```
-
-2. Open your browser and navigate to [http://localhost:3000](http://localhost:3000).
-
-3. Explore the simple login, signup, and welcome page.
-
-## Contributing
-
-If you'd like to contribute to this project, please follow these guidelines:
-
-1. Fork the repository.
-2. Create a new branch: `git checkout -b feature-name`.
-3. Make your changes and commit them: `git commit -m 'Add feature-name'`.
-4. Push to the branch: `git push origin feature-name`.
-5. Submit a pull request.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

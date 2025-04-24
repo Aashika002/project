@@ -1,61 +1,127 @@
+require('dotenv').config();
 const express = require('express');
-const mysql = require('mysql2');
 const cors = require('cors');
-const bodyParser = require('body-parser');
+const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
 
-// Database connection MySQL
-const db = mysql.createConnection({
-  host: 'db',
-  user: 'ak',
-  password: 'ak123',
-  database: 'mydb'
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Database connection
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
 });
 
-db.connect(err => {
-  if (err) {
-    console.log('Database connection failed:', err);
-  } else {
-    console.log('Connected to MySQL');
+// Initialize database and create users table
+async function initDB() {
+  try {
+    const connection = await pool.getConnection();
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    connection.release();
+    console.log('Database initialized successfully');
+  } catch (error) {
+    console.error('Database initialization error:', error);
+  }
+}
+
+initDB();
+
+// Middleware to verify JWT token
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid token' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// Register endpoint
+app.post('/api/register', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const [result] = await pool.execute(
+      'INSERT INTO users (email, password) VALUES (?, ?)',
+      [email, hashedPassword]
+    );
+
+    const token = jwt.sign({ id: result.insertId, email }, process.env.JWT_SECRET);
+    res.status(201).json({ token });
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ message: 'Email already exists' });
+    }
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Signup Route
-app.post('/signup', async (req, res) => {
-  const { username, email, password } = req.body;
+// Login endpoint
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
-  db.query(sql, [username, email, hashedPassword], (err, result) => {
-    if (err) return res.status(500).send({ msg: "Signup failed", error: err });
-    res.send({ msg: "Signup successful" });
-  });
+    const [users] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
+    const user = users[0];
+
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET);
+    res.json({ token });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-// Login Route
-app.post('/login', (req, res) => {
-  const { email, password } = req.body;
+// Get user info endpoint (protected)
+app.get('/api/user', authenticateToken, async (req, res) => {
+  try {
+    const [users] = await pool.execute(
+      'SELECT id, email, created_at FROM users WHERE id = ?',
+      [req.user.id]
+    );
+    const user = users[0];
 
-  const sql = "SELECT * FROM users WHERE email = ?";
-  db.query(sql, [email], async (err, results) => {
-    if (err) return res.status(500).send({ msg: "Login failed", error: err });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-    if (results.length === 0) return res.status(400).send({ msg: "User not found" });
-
-    const user = results[0];
-    const isMatch = await bcrypt.compare(password, user.password);
-    
-    if (!isMatch) return res.status(400).send({ msg: "Invalid credentials" });
-
-    res.send({ msg: "Login successful", user: { id: user.id, username: user.username, email: user.email } });
-  });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-app.listen(5000, () => {
-  console.log('Server is running on port 5000');
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
-
