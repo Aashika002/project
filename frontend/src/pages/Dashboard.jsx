@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import {
   LineChart,
   Line,
@@ -28,15 +29,15 @@ const Dashboard = () => {
       <aside className="w-64 bg-white shadow-md hidden md:block">
         <div className="p-6 text-2xl font-bold text-indigo-600">📊 MyDash</div>
         <nav className="mt-6 space-y-1">
-          <a href="/" className="flex items-center px-6 py-2 text-gray-700 hover:bg-gray-100">
+          <Link href="/" className="flex items-center px-6 py-2 text-gray-700 hover:bg-gray-100">
             <FiHome className="mr-3" /> Dashboard
-          </a>
-          <a href="profile" className="flex items-center px-6 py-2 text-gray-700 hover:bg-gray-100">
+          </Link>
+          <Link href="profile" className="flex items-center px-6 py-2 text-gray-700 hover:bg-gray-100">
             <FiUser className="mr-3" /> Profile
-          </a>
-          <a href="setting" className="flex items-center px-6 py-2 text-gray-700 hover:bg-gray-100">
+          </Link>
+          <Link href="setting" className="flex items-center px-6 py-2 text-gray-700 hover:bg-gray-100">
             <FiSettings className="mr-3" /> Settings
-          </a>
+          </Link>
         </nav>
       </aside>
 
